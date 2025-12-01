@@ -1,0 +1,104 @@
+name: Production APK Build & Deploy
+
+on:
+  push:
+    branches:
+      - prod
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build APK and Deploy to S3
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      
+      - name: Build Android APK
+        run: |
+          eas build --platform android --profile production --non-interactive --no-wait
+      
+      - name: Wait for build and download
+        run: |
+          eas build:download --platform android --latest --output=./app-release.apk
+      
+      - name: Get version info
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          TIMESTAMP=$(date -Iseconds)
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+          BUILD_NAME="app-release-v${VERSION}-build${GITHUB_RUN_NUMBER}.apk"
+          echo "build_name=$BUILD_NAME" >> $GITHUB_OUTPUT
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+      
+      - name: Upload APK to S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: eu-west-2
+        run: |
+          aws s3 cp ./app-release.apk \
+            s3://plant-app-builds-apk/releases/${{ steps.version.outputs.build_name }} \
+            --content-type application/vnd.android.package-archive
+          
+          echo "Uploaded: releases/${{ steps.version.outputs.build_name }}"
+          
+          aws s3 cp ./app-release.apk \
+            s3://plant-app-builds-apk/app-debug-latest.apk \
+            --content-type application/vnd.android.package-archive
+          
+          echo "Updated: app-debug-latest.apk"
+      
+      - name: Update version.json
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: eu-west-2
+        run: |
+          cat > version.json << EOF
+          {
+            "version": "${{ steps.version.outputs.version }}",
+            "versionCode": ${{ github.run_number }},
+            "downloadUrl": "https://plant-app-builds-apk.s3.eu-west-2.amazonaws.com/app-debug-latest.apk",
+            "releaseNotes": "Production build v${{ steps.version.outputs.version }} from commit ${{ steps.version.outputs.short_sha }}",
+            "mandatory": false,
+            "timestamp": "${{ steps.version.outputs.timestamp }}",
+            "buildNumber": ${{ github.run_number }},
+            "gitCommit": "${{ steps.version.outputs.short_sha }}"
+          }
+          EOF
+          
+          aws s3 cp version.json s3://plant-app-builds-apk/version.json \
+            --content-type application/json
+          
+          echo "version.json updated"
+      
+      - name: Success notification
+        if: success()
+        run: |
+          echo "::notice::Build successful! APK available at: https://plant-app-builds-apk.s3.eu-west-2.amazonaws.com/app-debug-latest.apk"
+      
+      - name: Failure notification
+        if: failure()
+        run: |
+          echo "::error::Build failed. Check logs above."
