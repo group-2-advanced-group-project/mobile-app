@@ -74,6 +74,9 @@ export default function HomeScreen() {
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
       </ThemedView>
+      <ThemedView style={styles.stepContainer}>
+        <ThemedText type="subtitle">Asad was here</ThemedText>
+      </ThemedView>
     </ParallaxScrollView>
   );
 }
