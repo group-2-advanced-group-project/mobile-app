@@ -1,0 +1,20 @@
+# .github/workflows/enforce-dev-to-prod.yml
+name: Enforce dev-to-prod workflow
+
+on:
+  pull_request:
+    branches:
+      - prod
+
+jobs:
+  check-source-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if PR is from dev branch
+        run: |
+          if [ "${{ github.head_ref }}" != "dev" ]; then
+            echo "ERROR: Pull requests to prod must come from dev branch only"
+            echo "Current source branch: ${{ github.head_ref }}"
+            exit 1
+          fi
+          echo "Valid: PR is from dev branch"
