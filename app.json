@@ -12,6 +12,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "uk.ac.qmul.ecs7019.group2.plantcare",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
