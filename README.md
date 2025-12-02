@@ -1,3 +1,77 @@
+# Development Workflow
+
+## Branch Structure
+```
+feature/your-feature → dev → prod
+bugfix/your-fix    ↗
+```
+
+## Rules
+
+- **`prod`** - Production code. Only accepts PRs from `dev`.
+- **`dev`** - Integration branch. Accepts PRs from feature/bugfix branches.
+- **`feature/*`** or **`bugfix/*`** - Your work. Deleted after merge.
+
+## Workflow
+
+### 1. Start new work
+```bash
+git checkout dev
+git pull origin dev
+git checkout -b feature/your-feature-name
+```
+
+### 2. Work and commit
+```bash
+git add .
+git commit -m "Description of changes"
+git push origin feature/your-feature-name
+```
+
+### 3. Create PR on GitHub
+- Base: `dev` ← Compare: `feature/your-feature-name`
+- Get 1+ approval
+- Merge
+
+### 4. Clean up
+```bash
+git checkout dev
+git pull origin dev
+git branch -d feature/your-feature-name
+```
+
+### 5. Release to production
+- Create PR: `prod` ← `dev`
+- Get 2+ approvals
+- Merge
+
+## Branch Naming
+```
+feature/   - New features (feature/push-notifications)
+bugfix/    - Bug fixes (bugfix/sensor-timeout)
+hotfix/    - Urgent prod fix (hotfix/critical-crash)
+docs/      - Documentation (docs/setup-guide)
+```
+
+## Quick Commands
+```bash
+# Start work
+git checkout dev && git pull && git checkout -b feature/name
+
+# Save work  
+git add . && git commit -m "msg" && git push origin feature/name
+
+# After merge
+git checkout dev && git pull && git branch -d feature/name
+```
+
+## Protection
+
+- ✅ `prod` only accepts PRs from `dev` (enforced by GitHub Actions)
+- ✅ Both `dev` and `prod` require PR approval
+- ✅ CI checks must pass before merge
+
+
 # Welcome to your Expo app 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).

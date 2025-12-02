@@ -33,11 +33,11 @@ jobs:
       
       - name: Build Android APK
         run: |
-          eas build --platform android --profile production --non-interactive --no-wait
+          eas build --platform android --profile production --non-interactive
       
-      - name: Wait for build and download
+      - name: Download APK
         run: |
-          eas build:download --platform android --latest --output=./app-release.apk
+          eas build:download --platform android --output=./app-release.apk
       
       - name: Get version info
         id: version
