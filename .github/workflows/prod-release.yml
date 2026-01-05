@@ -37,11 +37,7 @@ jobs:
       
       - name: Download APK
         run: |
-          eas build:download --platform android
-          # EAS downloads as something like "build-1234567890.apk"
-          # Find and rename it
-          find . -name "*.apk" -exec mv {} ./app-release.apk \;
-      
+          eas build:download --platform android -- latest --output=./app-release.apk
       
       - name: Get version info
         id: version
