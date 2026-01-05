@@ -75,7 +75,7 @@ export default function HomeScreen() {
         </ThemedText>
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Asad was here</ThemedText>
+        <ThemedText type="subtitle">Asad was here again</ThemedText>
       </ThemedView>
     </ParallaxScrollView>
   );
