@@ -35,11 +35,12 @@ jobs:
         run: |
           eas build --platform android --profile production --non-interactive
 
-      - name: Get build URL and download APK
+      - name: Download APK from artifact URL
         run: |
-          BUILD_URL=$(eas build:list --platform android --limit 1 --json | jq -r '.[0].artifacts.buildUrl')
-          echo "Downloading from: $BUILD_URL"
-          wget -O ./app-release.apk "$BUILD_URL"
+          APK_URL=$(eas build:list --platform android --limit 1 | grep "Application Archive URL" | awk '{print $NF}')
+          echo "Downloading from: $APK_URL"
+          curl -L -o ./app-release.apk "$APK_URL"
+          ls -lh ./app-release.apk
       
       - name: Get version info
         id: version
