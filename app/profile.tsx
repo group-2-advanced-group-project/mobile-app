@@ -1,32 +1,56 @@
 // app/profile.tsx
 
+import OAuthService from "@/services/OAuthService";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import OAuthService from "../services/OAuthService";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function ProfileScreen() {
+  const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState("");
   const router = useRouter();
 
   useEffect(() => {
-    loadUserInfo();
+    loadUser();
   }, []);
 
-  const loadUserInfo = async () => {
-    const idToken = await OAuthService.getIdToken();
-    if (!idToken) {
+  const loadUser = async () => {
+    try {
+      const user = await OAuthService.getCurrentUser();
+      if (user) {
+        setUserEmail(user.email);
+      } else {
+        router.replace("/login");
+      }
+    } catch (error) {
       router.replace("/login");
-      return;
+    } finally {
+      setLoading(false);
     }
-    const payload = JSON.parse(atob(idToken.split(".")[1]));
-    setUserEmail(payload.email || "Unknown");
   };
 
   const handleLogout = async () => {
-    await OAuthService.signOut();
-    router.replace("/login");
+    try {
+      await OAuthService.signOut();
+      router.replace("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -65,7 +89,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#4285F4",
+    backgroundColor: "#007AFF",
     justifyContent: "center",
     alignItems: "center",
     alignSelf: "center",
