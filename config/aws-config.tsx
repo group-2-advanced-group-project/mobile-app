@@ -1,14 +1,12 @@
-// config/aws-config.ts
-
 export const awsConfig = {
   region: "eu-west-2",
-  userPoolId: "eu-west-2_vBP9DclNB",
-  userPoolWebClientId: "7duoltp4drj1c0200o807pt0u",
+  userPoolId: "eu-west-2_ah7atlDyG",
+  userPoolWebClientId: "56g4hhoot2f4ga0chks0ajof3t",
   oauth: {
     domain: "plant-mate-auth-domain.auth.eu-west-2.amazoncognito.com",
     scope: ["email", "openid", "profile"],
-    redirectSignIn: "http://localhost:8081", // Changed for web
-    redirectSignOut: "http://localhost:8081", // Changed for web
+    redirectSignIn: "myapp://",
+    redirectSignOut: "myapp://",
     responseType: "code" as const,
   },
 };
