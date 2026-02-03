@@ -7,11 +7,11 @@ import {
     View
 } from "react-native";
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
+import Svg, { Polygon } from 'react-native-svg';
 
 type Slide = {
     id: string;
-    plant_name: string;
-    plant_type: string;
+    plant_info: string;
     fill_percnt: number;
 }
 const { width, height } = Dimensions.get('screen')
@@ -19,26 +19,22 @@ const { width, height } = Dimensions.get('screen')
 const SLIDES: Slide[] = [
     {
         id: "1",
-        plant_name: "Page 1",
-        plant_type: "Sunflower",
+        plant_info: 'water',
         fill_percnt: 33
     },
     {
         id: "2",
-        plant_name: "Page 2",
-        plant_type: "Sunflower",
+        plant_info: 'temperature',
         fill_percnt: 50
     },
     {
         id: "3",
-        plant_name: "hi",
-        plant_type: "Sunflower",
+        plant_info: 'light intensity',
         fill_percnt: 75
     },
     {
         id: "4",
-        plant_name: "Page 4",
-        plant_type: "Sunflower",
+        plant_info: 'humidity',
         fill_percnt: 100
     },
 ];
@@ -48,8 +44,32 @@ const SLIDES: Slide[] = [
 export default function MainPlantPage() {
 
     return (
-        <View style={styles.container}>
+        <View>
             <View style={styles.plantSelector}>
+            </View>
+            <View style={styles.plantTitle}>
+
+                <View style={styles.plantName}>
+                    <Text style={styles.plantNameText}>Plant Name</Text>
+                </View>
+
+                <Svg width={width * 0.1} height="100%" viewBox="0 0 30 60" style={{ marginLeft: -6, marginRight: -6 }}>
+
+                    <Polygon
+                        points="-6,-6 -6,66 36,-6"
+                        fill="#0A8F2A"   // same as left side
+                    />
+
+                    <Polygon
+                        points="36,-6 -6,66 36,66"
+                        fill="#1EFF4A"   // same as right side
+                    />
+                </Svg>
+
+                <View style={styles.plantType}>
+                    <Text style={styles.plantTypeText}>Plant Type</Text>
+                </View>
+
             </View>
             <View>
                 <Animated.FlatList
@@ -61,17 +81,8 @@ export default function MainPlantPage() {
                     renderItem={({ item }) => {
                         return (
                             <View style={styles.slide}>
-                                <View style={styles.plantTitle}>
-
-                                    <View style={styles.plantName}>
-                                        <Text >{item.plant_name}</Text>
-                                    </View>
-
-                                    <View style={styles.plantType}>
-                                        <Text >{item.plant_type}</Text>
-                                    </View>
-
-                                </View>
+                                
+                                <Text>{item.plant_info}</Text>
 
                                 <AnimatedCircularProgress
                                     style={{ marginTop: width * 0.1 }}
@@ -111,21 +122,43 @@ const styles = StyleSheet.create({
     },
     plantTitle: {
         flexDirection: 'row',
-
+        height: 45,
+        borderBottomWidth: 1,
+        overflow: 'hidden',
+        borderTopWidth: 1,
+        borderColor: 'transparent',
+        // paddingHorizontal: 12,
     },
     plantName: {
         flex: 1,
-        // left: 0,
+        backgroundColor: '#038b10',
         justifyContent: 'center',
-        alignItems: 'flex-start',
-        // backgroundColor: '#038b10',
-     
+        paddingLeft: 12,
+        // textAlign: 'left',
     },
     plantType: {
-        backgroundColor: 'transparent',
-        padding: width * 0.01,
-
-
+        width: width * 0.3,
+        backgroundColor: '#00ff44',
+        justifyContent: 'center',
+        paddingRight: 12,
+        alignItems: 'flex-end'
+        // textAlign: 'right',
+    },
+    svg: {
+        height: "100%",
+    },
+    plantNameText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '600',
+        letterSpacing: 0.2,
+    },
+    plantTypeText: {
+        color: '#010101',
+        fontSize: 12,
+        fontWeight: '600',
+        letterSpacing: 0.6,
+        textTransform: 'uppercase',
     },
     plantSelector: {
         backgroundColor: "#3d5243",
@@ -139,17 +172,5 @@ const styles = StyleSheet.create({
         bottom: 60,
         flexDirection: 'row',
         alignSelf: 'center',
-    },
-    dot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#D1D5DB',
-        marginHorizontal: 6,
-    },
-    activeDot: {
-        backgroundColor: '#22C55E',
-        width: 10,
-        height: 10,
     },
 });
