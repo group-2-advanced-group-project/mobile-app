@@ -1,3 +1,4 @@
+import { Droplet, Droplets, SunMedium, Thermometer } from 'lucide-react-native';
 import React from 'react';
 import {
     Animated,
@@ -57,12 +58,12 @@ export default function MainPlantPage() {
 
                     <Polygon
                         points="-6,-6 -6,66 36,-6"
-                        fill="#0A8F2A"   // same as left side
+                        fill="#038b10"
                     />
 
                     <Polygon
                         points="36,-6 -6,66 36,66"
-                        fill="#1EFF4A"   // same as right side
+                        fill="#00ff44"
                     />
                 </Svg>
 
@@ -81,7 +82,7 @@ export default function MainPlantPage() {
                     renderItem={({ item }) => {
                         return (
                             <View style={styles.slide}>
-                                
+
                                 <Text>{item.plant_info}</Text>
 
                                 <AnimatedCircularProgress
@@ -92,10 +93,21 @@ export default function MainPlantPage() {
                                     rotation={270}
                                     fill={item.fill_percnt}
                                     tintColor="#45b65f"
-                                    backgroundColor="#3d5875"
+                                    backgroundColor="#63716d"
                                     padding={width * 0.05}
                                 >
-                                    {fill => <Text >{fill}</Text>}
+                                    {fill =>
+
+                                        <View>
+                                            {item.plant_info === 'water' && <Droplet />}
+                                            {item.plant_info === 'temperature' && <Thermometer />}
+                                            {item.plant_info === 'light intensity' && <SunMedium />}
+                                            {item.plant_info === 'humidity' && <Droplets />}
+
+                                            <Text >{fill}</Text>
+                                        </View>
+
+                                    }
 
                                 </AnimatedCircularProgress>
 
@@ -104,9 +116,23 @@ export default function MainPlantPage() {
                     }}
                 />
             </View>
-            <View style={styles.infoViewer}>
-                <Text>Hello</Text>
+            {/* BELOW HERE A VERTICAL SCROLLABLE COULD BE IMPLEMENTED */}
+            <View style={styles.plantInfoNotification}>
+                <Droplet />
+                <Text style={styles.plantInfoNotificationText}>
+                    Your plant needs water!
+                </Text>
             </View>
+            <View style={styles.plantGeneralInfo}>
+                <Text>Last Water</Text>
+                <Text></Text>
+            </View>
+            <View style={styles.plantGeneralInfo}>
+                <Text>Plant Lifespan</Text>
+                <Text>Other Plant Info</Text>
+                <Text>Other Plant Info</Text>
+            </View>
+
         </View>
     )
 }
@@ -162,15 +188,39 @@ const styles = StyleSheet.create({
     },
     plantSelector: {
         backgroundColor: "#3d5243",
-        padding: 20,
+        padding: 10,
+        outlineColor: '#3d5243',
+        margin: 0,
     },
-    infoViewer: {
-        backgroundColor: "#9aaba445"
+    plantInfoNotification: {
+        padding: width * 0.05,
+        marginLeft: width * 0.05,
+        marginRight: width * 0.05,
+        marginBottom: width * 0.05,
+        backgroundColor: '#00ff44',
+        borderRadius: 15,
+        shadowColor: '#000000',
+        shadowOffset: {
+            width: 3,
+            height: 3
+        },
+        shadowRadius: 5,
+        shadowOpacity: 1.0,
+        elevation: 5
     },
-    pagination: {
-        position: 'absolute',
-        bottom: 60,
+    plantInfoNotificationText: {
+        color: '#000000',
+        fontSize: 18,
+        fontWeight: 500,
+        textAlign: 'center'
+
+    },
+    plantGeneralInfo: {
         flexDirection: 'row',
-        alignSelf: 'center',
+        backgroundColor: "#9aaba445",
+        padding: width * 0.05,
+        marginLeft: width * 0.05,
+        marginRight: width * 0.05,
+        marginBottom: width * 0.05,
     },
 });
