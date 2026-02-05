@@ -3,12 +3,16 @@ import React from 'react';
 import {
     Animated,
     Dimensions,
+    NativeScrollEvent,
+    NativeSyntheticEvent,
     StyleSheet,
     Text,
     View
 } from "react-native";
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import Svg, { Polygon } from 'react-native-svg';
+
+const DOT_SIZE = 10;
 
 type Slide = {
     id: string;
@@ -44,6 +48,26 @@ const SLIDES: Slide[] = [
 
 export default function MainPlantPage() {
 
+    const [currentIndex, setCurrentIndex] = React.useState(0);
+
+    const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const totalWidth = event.nativeEvent.layoutMeasurement.width;
+        const xPos = event.nativeEvent.contentOffset.x;
+        const current = Math.floor(xPos / totalWidth);
+        setCurrentIndex(current);
+    }
+
+    const Pagination = (
+        <View style={styles.pagination}>
+            {SLIDES.map((_, index) => (
+                <View key={index} style={[
+                    styles.paginationDot,
+                    (currentIndex === index) ? styles.paginationDotSelected : {}
+                ]} />
+            ))}
+        </View>
+    )
+
     return (
         <View>
             <View style={styles.plantSelector}>
@@ -78,6 +102,7 @@ export default function MainPlantPage() {
                     keyExtractor={item => item.id}
                     horizontal
                     showsHorizontalScrollIndicator={false}
+                    onScroll={onScroll}
                     pagingEnabled
                     renderItem={({ item }) => {
                         return (
@@ -99,12 +124,12 @@ export default function MainPlantPage() {
                                     {fill =>
 
                                         <View>
-                                            {item.plant_info === 'water' && <Droplet />}
-                                            {item.plant_info === 'temperature' && <Thermometer />}
-                                            {item.plant_info === 'light intensity' && <SunMedium />}
-                                            {item.plant_info === 'humidity' && <Droplets />}
+                                            {item.plant_info === 'water' && <Droplet size={64} />}
+                                            {item.plant_info === 'temperature' && <Thermometer size={64} />}
+                                            {item.plant_info === 'light intensity' && <SunMedium size={64} />}
+                                            {item.plant_info === 'humidity' && <Droplets size={64} />}
 
-                                            <Text >{fill}</Text>
+                                            {/* <Text >{fill}</Text> */}
                                         </View>
 
                                     }
@@ -115,10 +140,11 @@ export default function MainPlantPage() {
                         );
                     }}
                 />
+            {Pagination}
             </View>
             {/* BELOW HERE A VERTICAL SCROLLABLE COULD BE IMPLEMENTED */}
             <View style={styles.plantInfoNotification}>
-                <Droplet />
+                <Droplet color="#fff"/>
                 <Text style={styles.plantInfoNotificationText}>
                     Your plant needs water!
                 </Text>
@@ -142,9 +168,28 @@ const styles = StyleSheet.create({
         flex: 1
     },
     slide: {
-        height: height / 3,
+        height: height * 0.35,
         width: width,
-        alignItems: 'center'
+        alignItems: 'center',
+        backgroundColor: '#ebebeb',
+        // marginBottom: height * 0.025,
+    },
+    pagination: {
+        width,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginBottom: height * 0.02,
+        backgroundColor: '#ebebeb'
+    },
+    paginationDot: {
+        borderRadius: DOT_SIZE,
+        width: DOT_SIZE,
+        height: DOT_SIZE,
+        margin: 10,
+        backgroundColor: '#bfbdbd',
+    },
+    paginationDotSelected: {
+        backgroundColor: '#ffffff'
     },
     plantTitle: {
         flexDirection: 'row',
@@ -197,19 +242,19 @@ const styles = StyleSheet.create({
         marginLeft: width * 0.05,
         marginRight: width * 0.05,
         marginBottom: width * 0.05,
-        backgroundColor: '#00ff44',
+        backgroundColor: '#038b10',
         borderRadius: 15,
         shadowColor: '#000000',
         shadowOffset: {
-            width: 3,
+            width: 0,
             height: 3
         },
         shadowRadius: 5,
-        shadowOpacity: 1.0,
+        shadowOpacity: 0.4,
         elevation: 5
     },
     plantInfoNotificationText: {
-        color: '#000000',
+        color: '#ffffff',
         fontSize: 18,
         fontWeight: 500,
         textAlign: 'center'
