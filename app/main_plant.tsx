@@ -1,5 +1,5 @@
 import { Droplet, Droplets, SunMedium, Thermometer } from 'lucide-react-native';
-import React from 'react';
+import { useCallback, useState } from 'react';
 import {
     Animated,
     Dimensions,
@@ -7,10 +7,13 @@ import {
     NativeSyntheticEvent,
     StyleSheet,
     Text,
-    View
+    View,
+    ViewStyle
 } from "react-native";
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import Svg, { Polygon } from 'react-native-svg';
+
+const { width, height } = Dimensions.get('screen')
 
 const DOT_SIZE = 10;
 
@@ -19,7 +22,6 @@ type Slide = {
     plant_info: string;
     fill_percnt: number;
 }
-const { width, height } = Dimensions.get('screen')
 
 const SLIDES: Slide[] = [
     {
@@ -44,34 +46,88 @@ const SLIDES: Slide[] = [
     },
 ];
 
+type PlantNotification = {
+    id: string;
+    notification_type: string;
+    notification_info: string;
+}
 
+const NOTIFICATIONS: PlantNotification[] = [
+    {
+        id: "1",
+        notification_type: 'water',
+        notification_info: 'You need to water your plant'
+    },
+    {
+        id: "2",
+        notification_type: 'temperature',
+        notification_info: 'Your plant is too cold'
+    },
+    {
+        id: "3",
+        notification_type: 'light intensity',
+        notification_info: 'Your plant needs light'
+    },
+    {
+        id: "4",
+        notification_type: 'humidity',
+        notification_info: 'You need to water your plant'
+    },
+]
+
+export const getCurrentIndexFromScroll = (
+    event: NativeSyntheticEvent<NativeScrollEvent>
+) => {
+    const width = event.nativeEvent.layoutMeasurement.width;
+    const x = event.nativeEvent.contentOffset.x;
+    return Math.round(x / width);
+};
+
+export function usePagination() {
+    const [index, setIndex] = useState(0);
+
+    const onScroll = useCallback(
+        (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+            const current = getCurrentIndexFromScroll(event);
+            setIndex(current);
+        },
+        []
+    );
+
+    return { index, onScroll, setIndex };
+}
+
+type PaginationProps = {
+    length: number;
+    currentIndex: number;
+    paginationStyle?: ViewStyle;
+    paginationDot?: ViewStyle;
+    paginationDotSelected?: ViewStyle;
+};
+
+export function Pagination({ length, currentIndex, paginationStyle, paginationDot, paginationDotSelected }: PaginationProps) {
+    return (
+        <View style={[paginationStyle]}>
+            {Array.from({ length }).map((_, index) => (
+                <View
+                    key={index}
+                    style={[
+                        paginationDot,
+                        currentIndex === index && paginationDotSelected,
+                    ]}
+                />
+            ))}
+        </View>
+    );
+}
 
 export default function MainPlantPage() {
 
-    const [currentIndex, setCurrentIndex] = React.useState(0);
-
-    const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-        const totalWidth = event.nativeEvent.layoutMeasurement.width;
-        const xPos = event.nativeEvent.contentOffset.x;
-        const current = Math.floor(xPos / totalWidth);
-        setCurrentIndex(current);
-    }
-
-    const Pagination = (
-        <View style={styles.pagination}>
-            {SLIDES.map((_, index) => (
-                <View key={index} style={[
-                    styles.paginationDot,
-                    (currentIndex === index) ? styles.paginationDotSelected : {}
-                ]} />
-            ))}
-        </View>
-    )
+    const plantPagination = usePagination();
+    const notificationPagination = usePagination();
 
     return (
         <View>
-            <View style={styles.plantSelector}>
-            </View>
             <View style={styles.plantTitle}>
 
                 <View style={styles.plantName}>
@@ -102,7 +158,7 @@ export default function MainPlantPage() {
                     keyExtractor={item => item.id}
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    onScroll={onScroll}
+                    onScroll={plantPagination.onScroll}
                     pagingEnabled
                     renderItem={({ item }) => {
                         return (
@@ -140,15 +196,48 @@ export default function MainPlantPage() {
                         );
                     }}
                 />
-            {Pagination}
+                <Pagination
+                    length={SLIDES.length}
+                    currentIndex={plantPagination.index}
+                    paginationStyle={styles.pagination}
+                    paginationDot={styles.paginationDot}
+                    paginationDotSelected={styles.paginationDotSelected}
+
+                />
             </View>
             {/* BELOW HERE A VERTICAL SCROLLABLE COULD BE IMPLEMENTED */}
-            <View style={styles.plantInfoNotification}>
-                <Droplet color="#fff"/>
-                <Text style={styles.plantInfoNotificationText}>
-                    Your plant needs water!
-                </Text>
-            </View>
+            <Animated.FlatList
+                data={NOTIFICATIONS}
+                keyExtractor={item => item.id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                onScroll={notificationPagination.onScroll}
+                pagingEnabled
+                renderItem={({ item }) => {
+                    return (
+                        <View style={styles.plantInfoNotification}>
+                            <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+                                {/* <Droplet color="#fff" /> */}
+                                {item.notification_type === 'water' &&  <Droplet size={30} color="#fff"/>}
+                                {item.notification_type === 'temperature' && <Thermometer size={30} color="#fff"/>}
+                                {item.notification_type === 'light intensity' && <SunMedium size={30} color="#fff"/>}
+                                {item.notification_type === 'humidity' && <Droplets size={30} color="#fff"/>}
+                                <Text style={styles.plantInfoNotificationText}>
+                                    {item.notification_info}
+                                </Text>
+                            </View>
+                            <Pagination
+                                length={NOTIFICATIONS.length}
+                                currentIndex={notificationPagination.index}
+                                paginationStyle={styles.notificationPagination}
+                                paginationDot={styles.notificationPaginationDot}
+                                paginationDotSelected={styles.notificationPaginationDotSelected}
+                            />
+                        </View>
+                    );
+
+                }}
+            />
             <View style={styles.plantGeneralInfo}>
                 <Text>Last Water</Text>
                 <Text></Text>
@@ -157,6 +246,8 @@ export default function MainPlantPage() {
                 <Text>Plant Lifespan</Text>
                 <Text>Other Plant Info</Text>
                 <Text>Other Plant Info</Text>
+            </View>
+            <View style={styles.plantSelector}>
             </View>
 
         </View>
@@ -185,10 +276,27 @@ const styles = StyleSheet.create({
         borderRadius: DOT_SIZE,
         width: DOT_SIZE,
         height: DOT_SIZE,
-        margin: 10,
+        margin: 7,
         backgroundColor: '#bfbdbd',
     },
     paginationDotSelected: {
+        backgroundColor: '#ffffff'
+    },
+    notificationPagination: {
+        paddingTop: height * 0.01,
+        width: width * 0.8,
+        flexDirection: 'row',
+        justifyContent: 'center',
+    },
+    notificationPaginationDot: {
+        borderRadius: 6,
+        width: 6,
+        height: 6,
+        margin: 5,
+        marginBottom: 0,
+        backgroundColor: '#376821',
+    },
+    notificationPaginationDotSelected: {
         backgroundColor: '#ffffff'
     },
     plantTitle: {
@@ -233,11 +341,12 @@ const styles = StyleSheet.create({
     },
     plantSelector: {
         backgroundColor: "#3d5243",
-        padding: 10,
+        padding: 20,
         outlineColor: '#3d5243',
         margin: 0,
     },
     plantInfoNotification: {
+        width: width * 0.9,
         padding: width * 0.05,
         marginLeft: width * 0.05,
         marginRight: width * 0.05,
@@ -257,7 +366,8 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         fontSize: 18,
         fontWeight: 500,
-        textAlign: 'center'
+        textAlign: 'center',
+        justifyContent: 'center'
 
     },
     plantGeneralInfo: {
