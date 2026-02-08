@@ -40,14 +40,9 @@ class AuthService {
       });
 
       // 4. Open browser and prompt user to authenticate
-      const result = await request.promptAsync(
-        {
-          authorizationEndpoint: this.authEndpoint,
-        },
-        {
-          preferEphemeralSession: true,
-        },
-      );
+      const result = await request.promptAsync({
+        authorizationEndpoint: this.authEndpoint,
+      });
 
       // 5. Check if successful
       if (result.type === "success") {
