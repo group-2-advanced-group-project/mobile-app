@@ -3,14 +3,14 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import OAuthService from "../services/OAuthService";
+import AuthService from "../services/AuthService";
 
 export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
@@ -19,7 +19,7 @@ export default function LoginScreen() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      await OAuthService.signInWithGoogle();
+      await AuthService.signInWithGoogle();
       router.replace("/profile");
     } catch (error: any) {
       Alert.alert("Login Failed", error.message);

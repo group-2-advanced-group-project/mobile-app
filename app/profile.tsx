@@ -3,7 +3,7 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import OAuthService from "../services/OAuthService";
+import AuthService from "../services/AuthService";
 
 export default function ProfileScreen() {
   const [userEmail, setUserEmail] = useState("");
@@ -14,7 +14,7 @@ export default function ProfileScreen() {
   }, []);
 
   const loadUserInfo = async () => {
-    const idToken = await OAuthService.getIdToken();
+    const idToken = await AuthService.getIdToken();
     if (!idToken) {
       router.replace("/login");
       return;
@@ -24,7 +24,7 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = async () => {
-    await OAuthService.signOut();
+    await AuthService.signOut();
     router.replace("/login");
   };
 
