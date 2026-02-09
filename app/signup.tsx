@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import AuthService from "../services/AuthService";
 
 export default function SignUpScreen() {
   const [email, setEmail] = useState("");
@@ -24,7 +25,7 @@ export default function SignUpScreen() {
 
   const handleGoogleSignUp = async () => {
     try {
-      await OAuthService.signInWithGoogle(); // Same as login for Google
+      await AuthService.signInWithGoogle();
       router.replace("/profile");
     } catch (error: any) {
       console.error("Signup failed:", error.message);

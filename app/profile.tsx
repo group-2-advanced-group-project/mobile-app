@@ -3,13 +3,8 @@
 import OAuthService from "@/services/OAuthService";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import AuthService from "../services/AuthService";
 
 export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
@@ -20,15 +15,9 @@ export default function ProfileScreen() {
     loadUser();
   }, []);
 
-  const loadUser = async () => {
-    try {
-      const user = await OAuthService.getCurrentUser();
-      if (user) {
-        setUserEmail(user.email);
-      } else {
-        router.replace("/login");
-      }
-    } catch (error) {
+  const loadUserInfo = async () => {
+    const idToken = await AuthService.getIdToken();
+    if (!idToken) {
       router.replace("/login");
     } finally {
       setLoading(false);
@@ -36,21 +25,9 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = async () => {
-    try {
-      await OAuthService.signOut();
-      router.replace("/login");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+    await AuthService.signOut();
+    router.replace("/login");
   };
-
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>

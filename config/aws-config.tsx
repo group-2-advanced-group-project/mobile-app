@@ -1,12 +1,12 @@
 export const awsConfig = {
-  region: "eu-west-2",
-  userPoolId: "eu-west-2_ah7atlDyG",
-  userPoolWebClientId: "56g4hhoot2f4ga0chks0ajof3t",
+  region: process.env.EXPO_PUBLIC_AWS_REGION!,
+  userPoolId: process.env.EXPO_PUBLIC_COGNITO_USER_POOL_ID!,
+  userPoolWebClientId: process.env.EXPO_PUBLIC_COGNITO_CLIENT_ID!,
   oauth: {
-    domain: "plant-mate-auth-domain.auth.eu-west-2.amazoncognito.com",
+    domain: process.env.EXPO_PUBLIC_COGNITO_DOMAIN!,
     scope: ["email", "openid", "profile"],
-    redirectSignIn: "myapp://",
-    redirectSignOut: "myapp://",
+    redirectSignIn: process.env.EXPO_PUBLIC_REDIRECT_URI!,
+    redirectSignOut: process.env.EXPO_PUBLIC_REDIRECT_URI!,
     responseType: "code" as const,
   },
 };
