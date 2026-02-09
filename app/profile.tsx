@@ -1,27 +1,26 @@
 // app/profile.tsx
 
-import OAuthService from "@/services/OAuthService";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import AuthService from "../services/AuthService";
 
 export default function ProfileScreen() {
-  const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState("");
   const router = useRouter();
 
   useEffect(() => {
-    loadUser();
+    loadUserInfo();
   }, []);
 
   const loadUserInfo = async () => {
     const idToken = await AuthService.getIdToken();
     if (!idToken) {
       router.replace("/login");
-    } finally {
-      setLoading(false);
+      return;
     }
+    const payload = JSON.parse(atob(idToken.split(".")[1]));
+    setUserEmail(payload.email || "Unknown");
   };
 
   const handleLogout = async () => {
@@ -66,7 +65,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#007AFF",
+    backgroundColor: "#4285F4",
     justifyContent: "center",
     alignItems: "center",
     alignSelf: "center",
