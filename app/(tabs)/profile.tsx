@@ -3,7 +3,7 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import AuthService from "../services/AuthService";
+import AuthService from "../../services/AuthService";
 
 export default function ProfileScreen() {
   const [userEmail, setUserEmail] = useState("");
