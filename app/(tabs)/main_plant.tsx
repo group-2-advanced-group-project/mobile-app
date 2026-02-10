@@ -1,21 +1,16 @@
 import { Droplet, Droplets, SunMedium, Thermometer } from 'lucide-react-native';
-import { useCallback, useState } from 'react';
 import {
     Animated,
     Dimensions,
-    NativeScrollEvent,
-    NativeSyntheticEvent,
     StyleSheet,
     Text,
-    View,
-    ViewStyle
+    View
 } from "react-native";
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import Svg, { Polygon } from 'react-native-svg';
+import { Pagination, usePagination } from '../components/pagination_component';
 
 const { width, height } = Dimensions.get('screen')
-
-const DOT_SIZE = 10;
 
 type Slide = {
     id: string;
@@ -75,51 +70,7 @@ const NOTIFICATIONS: PlantNotification[] = [
     },
 ]
 
-export const getCurrentIndexFromScroll = (
-    event: NativeSyntheticEvent<NativeScrollEvent>
-) => {
-    const width = event.nativeEvent.layoutMeasurement.width;
-    const x = event.nativeEvent.contentOffset.x;
-    return Math.round(x / width);
-};
 
-export function usePagination() {
-    const [index, setIndex] = useState(0);
-
-    const onScroll = useCallback(
-        (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-            const current = getCurrentIndexFromScroll(event);
-            setIndex(current);
-        },
-        []
-    );
-
-    return { index, onScroll, setIndex };
-}
-
-type PaginationProps = {
-    length: number;
-    currentIndex: number;
-    paginationStyle?: ViewStyle;
-    paginationDot?: ViewStyle;
-    paginationDotSelected?: ViewStyle;
-};
-
-export function Pagination({ length, currentIndex, paginationStyle, paginationDot, paginationDotSelected }: PaginationProps) {
-    return (
-        <View style={[paginationStyle]}>
-            {Array.from({ length }).map((_, index) => (
-                <View
-                    key={index}
-                    style={[
-                        paginationDot,
-                        currentIndex === index && paginationDotSelected,
-                    ]}
-                />
-            ))}
-        </View>
-    );
-}
 
 export default function MainPlantPage() {
 
@@ -273,9 +224,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#ebebeb'
     },
     paginationDot: {
-        borderRadius: DOT_SIZE,
-        width: DOT_SIZE,
-        height: DOT_SIZE,
+        borderRadius: 10,
+        width: 10,
+        height: 10,
         margin: 7,
         backgroundColor: '#bfbdbd',
     },
