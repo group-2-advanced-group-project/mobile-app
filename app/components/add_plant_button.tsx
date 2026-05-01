@@ -14,12 +14,12 @@ export function AddPlantButton() {
 
     const waitForPermission = async () => {
         if (permissionGranted) {
-            router.push("/camera_scanner");
+            router.push("/scanner");
         } else {
             const result = await requestPermission();
 
             if (result.granted) {
-                router.push("/camera_scanner");
+                router.push("/scanner");
             }
         }
     };

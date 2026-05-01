@@ -1,45 +1,25 @@
-import { Droplet, Droplets, SunMedium, Thermometer } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Droplet, SunMedium, Thermometer } from 'lucide-react-native';
+import { useEffect, useState, } from 'react';
 import {
     Animated,
     Dimensions,
     StyleSheet,
     Text,
-    View
+    View,
 } from "react-native";
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import Svg, { Polygon } from 'react-native-svg';
 import { Pagination, usePagination } from '../components/pagination_component';
-
 const { width, height } = Dimensions.get('screen')
 
 type Slide = {
     id: string;
     plant_info: string;
-    fill_percnt: number;
+    stat: number;
+    optimal_stat: number;
+    fill: number;
 }
-
-const SLIDES: Slide[] = [
-    {
-        id: "1",
-        plant_info: 'water',
-        fill_percnt: 33
-    },
-    {
-        id: "2",
-        plant_info: 'temperature',
-        fill_percnt: 50
-    },
-    {
-        id: "3",
-        plant_info: 'light intensity',
-        fill_percnt: 75
-    },
-    {
-        id: "4",
-        plant_info: 'humidity',
-        fill_percnt: 100
-    },
-];
 
 type PlantNotification = {
     id: string;
@@ -50,7 +30,7 @@ type PlantNotification = {
 const NOTIFICATIONS: PlantNotification[] = [
     {
         id: "1",
-        notification_type: 'water',
+        notification_type: 'moisture',
         notification_info: 'You need to water your plant'
     },
     {
@@ -63,12 +43,46 @@ const NOTIFICATIONS: PlantNotification[] = [
         notification_type: 'light intensity',
         notification_info: 'Your plant needs light'
     },
-    {
-        id: "4",
-        notification_type: 'humidity',
-        notification_info: 'You need to water your plant'
-    },
 ]
+
+type Stats = {
+    plant: string;
+    temp: number;
+    moisture: number;
+    light: number;
+}
+
+const SPIDER_PLANT_OPTIMAL: Stats = {
+    plant: "Spider Plant",
+    temp: 21,
+    moisture: 50,
+    light: 400
+}
+
+const Empty_Slides: Slide[] = [
+    {
+        id: "1",
+        plant_info: 'moisture',
+        stat: 0,
+        optimal_stat: 0,
+        fill: 0
+    },
+    {
+        id: "2",
+        plant_info: 'temperature',
+        stat: 0,
+        optimal_stat: 0,
+        fill: 0
+    },
+    {
+        id: "3",
+        plant_info: 'light intensity',
+        stat: 0,
+        optimal_stat: 0,
+        fill: 0
+    },
+];
+
 
 
 
@@ -76,6 +90,86 @@ export default function MainPlantPage() {
 
     const plantPagination = usePagination();
     const notificationPagination = usePagination();
+
+
+    // Add these
+    const [devices, setDevices] = useState<Stats>();
+    const [readings, setReadings] = useState<Stats>();
+    const [slides, setSlides] = useState<Slide[]>(Empty_Slides);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const idToken = await AsyncStorage.getItem("idToken");
+
+            const devicesRes = await fetch("https://bnxw6o1jua.execute-api.eu-west-2.amazonaws.com/users/devices", {
+                method: "GET",
+
+                headers: { "Authorization": `Bearer ${idToken}` }
+            });
+            const devicesData = await devicesRes.json();
+            setDevices(devicesData);
+
+            const readingsPromises = devicesData.map(device =>
+                fetch(`https://bnxw6o1jua.execute-api.eu-west-2.amazonaws.com/devices/${device.device_id}/readings/latest`, {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${idToken}` }
+                }).then(res => res.json())
+            );
+
+            const plantReadingsRes = await fetch("https://bnxw6o1jua.execute-api.eu-west-2.amazonaws.com/devices/PLANT_MATE_TEST_001/readings/history", {
+                method: "GET",
+                headers: { "Authorization": `Bearer ${idToken}` }
+            });
+            const plantReadings = await plantReadingsRes.json();
+
+            const readingsData = await Promise.all(readingsPromises);
+            // setReadings(readingsData);
+            console.log(devicesData)
+            console.log(readingsData)
+            console.log(readingsData[0].lux, readingsData[0].t_aht, readingsData[0].soil_percent)
+            var latestReadingsData: Stats = {
+                plant: "Spider Plant",
+                temp: readingsData[0].t_aht,
+                moisture: readingsData[0].soil_percent,
+                light: readingsData[0].lux
+            }
+            console.log(latestReadingsData)
+            setReadings(latestReadingsData)
+            console.log(SPIDER_PLANT_OPTIMAL)
+
+            const SLIDES: Slide[] = [
+                {
+                    id: "1",
+                    plant_info: 'moisture',
+                    stat: readingsData[0].soil_percent,
+                    optimal_stat: SPIDER_PLANT_OPTIMAL.moisture,
+                    fill: Math.trunc(Math.max(0, 100 - (Math.abs(readingsData[0].soil_percent - SPIDER_PLANT_OPTIMAL.moisture))))
+                },
+                {
+                    id: "2",
+                    plant_info: 'temperature',
+                    stat: readingsData[0].t_aht,
+                    optimal_stat: SPIDER_PLANT_OPTIMAL.temp,
+                    fill: Math.trunc(Math.max(0, 100 - (Math.abs(readingsData[0].t_aht - SPIDER_PLANT_OPTIMAL.temp))))
+
+                },
+                {
+                    id: "3",
+                    plant_info: 'light intensity',
+                    stat: readingsData[0].lux,
+                    optimal_stat: SPIDER_PLANT_OPTIMAL.light,
+                    fill: Math.trunc(Math.max(0, 100 - (Math.abs(readingsData[0].lux - SPIDER_PLANT_OPTIMAL.light))))
+                },
+            ];
+
+            setSlides(SLIDES)
+            console.log(idToken)
+            console.log(SLIDES[2].stat, SLIDES[2].optimal_stat)
+            console.log(Math.trunc(Math.max(0, 100 - (Math.abs(SLIDES[1].stat - SLIDES[1].optimal_stat) / SLIDES[1].optimal_stat * 100))));
+        };
+
+        fetchData();
+    }, []);
 
     return (
         <View>
@@ -105,13 +199,14 @@ export default function MainPlantPage() {
             </View>
             <View>
                 <Animated.FlatList
-                    data={SLIDES}
+                    data={slides}
                     keyExtractor={item => item.id}
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     onScroll={plantPagination.onScroll}
                     pagingEnabled
                     renderItem={({ item }) => {
+                        // console.log(item);
                         return (
                             <View style={styles.slide}>
 
@@ -123,7 +218,8 @@ export default function MainPlantPage() {
                                     width={50}
                                     arcSweepAngle={180}
                                     rotation={270}
-                                    fill={item.fill_percnt}
+                                    fill={item.fill}
+                                    // fill={Math.trunc(Math.max(0, 100 - (Math.abs(item.stat - item.optimal_stat) / item.optimal_stat * 100)))}
                                     tintColor="#45b65f"
                                     backgroundColor="#63716d"
                                     padding={width * 0.05}
@@ -131,10 +227,10 @@ export default function MainPlantPage() {
                                     {fill =>
 
                                         <View>
-                                            {item.plant_info === 'water' && <Droplet size={64} />}
+                                            {item.plant_info === 'moisture' && <Droplet size={64} />}
                                             {item.plant_info === 'temperature' && <Thermometer size={64} />}
                                             {item.plant_info === 'light intensity' && <SunMedium size={64} />}
-                                            {item.plant_info === 'humidity' && <Droplets size={64} />}
+                                            {/* {item.plant_info === 'humidity' && <Droplets size={64} />} */}
 
                                             {/* <Text >{fill}</Text> */}
                                         </View>
@@ -148,7 +244,7 @@ export default function MainPlantPage() {
                     }}
                 />
                 <Pagination
-                    length={SLIDES.length}
+                    length={slides.length}
                     currentIndex={plantPagination.index}
                     paginationStyle={styles.pagination}
                     paginationDot={styles.paginationDot}
@@ -167,12 +263,12 @@ export default function MainPlantPage() {
                 renderItem={({ item }) => {
                     return (
                         <View style={styles.plantInfoNotification}>
-                            <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                                 {/* <Droplet color="#fff" /> */}
-                                {item.notification_type === 'water' &&  <Droplet size={30} color="#fff"/>}
-                                {item.notification_type === 'temperature' && <Thermometer size={30} color="#fff"/>}
-                                {item.notification_type === 'light intensity' && <SunMedium size={30} color="#fff"/>}
-                                {item.notification_type === 'humidity' && <Droplets size={30} color="#fff"/>}
+                                {item.notification_type === 'moisture' && <Droplet size={30} color="#fff" />}
+                                {item.notification_type === 'temperature' && <Thermometer size={30} color="#fff" />}
+                                {item.notification_type === 'light intensity' && <SunMedium size={30} color="#fff" />}
+                                {/* {item.notification_type === 'humidity' && <Droplets size={30} color="#fff" />} */}
                                 <Text style={styles.plantInfoNotificationText}>
                                     {item.notification_info}
                                 </Text>
