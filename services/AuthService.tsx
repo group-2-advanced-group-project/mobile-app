@@ -1,6 +1,7 @@
 import { awsConfig } from "@/config/aws-config";
 import { AuthTokens } from "@/types/auth.types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import messaging from '@react-native-firebase/messaging';
 import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 
@@ -57,6 +58,34 @@ class AuthService {
 
         // 7. Save tokens
         await this.saveTokens(tokens);
+        const authStatus = await messaging().hasPermission();
+        console.log('Notification permission status:', authStatus);
+
+        try {
+          const authStatus = await messaging().requestPermission();
+          const enabled =
+            authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+            authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+          if (enabled) {
+            const token = await messaging().getToken();
+            await fetch('https://w9xrldhhs4.execute-api.eu-west-2.amazonaws.com/users/fcm-token', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${tokens.idToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                device_id: 'PLANT_MATE_TEST_001',
+                fcm_token: token,
+              }),
+            });
+          } else {
+            console.warn('Notification permission denied — FCM token not sent');
+          }
+        } catch (fcmError) {
+          console.warn('Failed to register FCM token:', fcmError);
+        }
 
         return tokens;
       }
