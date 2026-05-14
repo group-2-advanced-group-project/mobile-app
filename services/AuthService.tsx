@@ -13,22 +13,10 @@ class AuthService {
   private readonly tokenEndpoint = `https://${awsConfig.oauth.domain}/oauth2/token`;
   private readonly revokeEndpoint = `https://${awsConfig.oauth.domain}/oauth2/revoke`;
 
-  // async signUp(email: string, password: string): Promise<void> {
-  //   // TODO
-  //   // traditional sign up with email and password
-  // }
-
-  // async signIn(email: string, password: string): Promise<AuthTokens> {
-  //   // TODO
-  //   // traditional sign in with email and password
-  // }
-
-  async signInWithGoogle(): Promise<AuthTokens> {
-    // OAuth sign in (and sign up) with google
+  async signInWithGoogle(onBrowserClose?: () => void): Promise<AuthTokens> {
     try {
       const redirectUri = this.getRedirectUri();
 
-      // Create authorisation request
       const request = new AuthSession.AuthRequest({
         clientId: awsConfig.userPoolWebClientId,
         scopes: awsConfig.oauth.scope,
@@ -36,28 +24,29 @@ class AuthService {
         responseType: AuthSession.ResponseType.Code,
         usePKCE: true,
         extraParams: {
-          identity_provider: "Google",
+          identity_provider: 'Google',
         },
       });
 
-      // 4. Open browser and prompt user to authenticate
       const result = await request.promptAsync({
         authorizationEndpoint: this.authEndpoint,
       });
 
-      // 5. Check if successful
-      if (result.type === "success") {
+      // Browser has closed - notify the UI immediately
+      // so it can show a loading screen while we finish
+      onBrowserClose?.();
+
+      if (result.type === 'success') {
         const { code } = result.params;
 
-        // 6. Exchange code for tokens
         const tokens = await this.exchangeCodeForTokens(
           code,
           redirectUri,
           request.codeVerifier!,
         );
 
-        // 7. Save tokens
         await this.saveTokens(tokens);
+        console.log(tokens.idToken)
         const authStatus = await messaging().hasPermission();
         console.log('Notification permission status:', authStatus);
 
@@ -69,30 +58,59 @@ class AuthService {
 
           if (enabled) {
             const token = await messaging().getToken();
-            await fetch('https://w9xrldhhs4.execute-api.eu-west-2.amazonaws.com/users/fcm-token', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${tokens.idToken}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                device_id: 'PLANT_MATE_TEST_001',
-                fcm_token: token,
-              }),
-            });
+            await AsyncStorage.setItem("fcmToken", token);
+            console.log(token);
+
+            // Fetch all devices for this user
+            const devicesRes = await fetch(
+              'https://bnxw6o1jua.execute-api.eu-west-2.amazonaws.com/users/devices',
+              {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${tokens.idToken}`,
+                  'Content-Type': 'application/json',
+                },
+              }
+            );
+
+            if (devicesRes.ok) {
+              const devices = await devicesRes.json();
+
+              // Send FCM token to every device in parallel
+              await Promise.all(
+                devices.map((device: { device_id: string }) =>
+                  fetch('https://w9xrldhhs4.execute-api.eu-west-2.amazonaws.com/users/fcm-token', {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${tokens.idToken}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      device_id: device.device_id,
+                      fcm_token: token,
+                    }),
+                  })
+                )
+              );
+
+              console.log(`FCM token sent to ${devices.length} device(s)`);
+            } else {
+              console.warn('Could not fetch devices to register FCM token');
+            }
           } else {
-            console.warn('Notification permission denied — FCM token not sent');
+            console.warn('Notification permission denied - FCM token not sent');
           }
         } catch (fcmError) {
           console.warn('Failed to register FCM token:', fcmError);
         }
+        // ... rest of your FCM token logic stays exactly the same
 
         return tokens;
       }
 
-      throw new Error("Authentication was cancelled or failed");
+      throw new Error('Authentication was cancelled or failed');
     } catch (error) {
-      console.error("Google sign-in error:", error);
+      console.error('Google sign-in error:', error);
       throw error;
     }
   }

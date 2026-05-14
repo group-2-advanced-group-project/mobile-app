@@ -16,7 +16,7 @@ export default function ProfileScreen() {
   const loadUserInfo = async () => {
     const idToken = await AuthService.getIdToken();
     if (!idToken) {
-      router.replace("/login");
+      router.replace('/');
       return;
     }
     const payload = JSON.parse(atob(idToken.split(".")[1]));
@@ -25,7 +25,7 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     await AuthService.signOut();
-    router.replace("/login");
+    router.replace('/');
   };
 
   return (

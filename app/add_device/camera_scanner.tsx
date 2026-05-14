@@ -1,3 +1,6 @@
+
+// OLD IMPLEMENTATION OF GETTING DEVICE ID THROUGH QR CODE
+
 import { CameraView } from "expo-camera";
 import { useRouter } from 'expo-router';
 import { useEffect, useRef } from "react";
