@@ -1,35 +1,92 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
+import { ChartLine, Heart, Sprout, UserRound } from 'lucide-react-native';
+import { Platform, StyleSheet } from 'react-native';
+import { AddPlantButton } from '../components/add_plant_button';
+import { InfoButton } from '../components/plant_score_info';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+export default function RootLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        animation: 'none',
+        tabBarActiveTintColor: '#fff',
+        tabBarInactiveTintColor: '#8aaa8a',
+        tabBarLabelStyle: styles.tabBarLabel,
+        tabBarStyle: styles.tabBar,
+        headerStyle: styles.header,
+        headerTitleStyle: styles.headerTitle,
+        headerShadowVisible: false,
+      }}
+    >
       <Tabs.Screen
-        name="index"
+        name="main_plant"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'My Plants',
+          tabBarIcon: ({ color, size }) => (
+            <Sprout color={color} size={size} />
+          ),
+          headerRight: () => <AddPlantButton />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="plant_score"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Plant Score',
+          tabBarIcon: ({ color, size }) => (
+            <Heart color={color} size={size} />
+          ),
+          headerRight: () => <InfoButton />,
+        }}
+      />
+      <Tabs.Screen
+        name="plant_graphs"
+        options={{
+          title: 'Plant Data',
+          tabBarIcon: ({ color, size }) => (
+            <ChartLine color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => (
+            <UserRound color={color} size={size} />
+          ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: '#2e7d32',
+    borderTopWidth: 1,
+    borderTopColor: '#e0ede0',
+    height: Platform.OS === 'ios' ? 88 : 72,
+    paddingTop: 8,
+    paddingBottom: 20,
+    shadowColor: '#2e7d32',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 8,
+  },
+  tabBarLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+    marginTop: 2,
+  },
+  header: {
+    backgroundColor: '#2e7d32',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#ffffff', 
+    letterSpacing: -0.3,
+  },
+});
